@@ -1,8 +1,9 @@
-# React + Vite
+http://localhost:6969/api/bookings/movies
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+http://localhost:6969/api/bookings/reserve
 
-Currently, two official plugins are available:
+http://localhost:6969/api/bookings/confirm
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+http://localhost:6969/api/register
+
+http://localhost:6969/api/login 
