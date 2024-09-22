@@ -30,6 +30,11 @@ export const reserveSeat = async (movieId, seatNumber) => {
   const response = await authAxios.post('/bookings/reserve', { movieId, seatNumber });
   return response.data;
 };
+export const cancelReserveSeat = async (movieId, seatNumber) => { 
+  console.log("api paramiters cancelReserveSeat: ", movieId," : ", seatNumber)
+  const response = await authAxios.post('/bookings/cancel-reserve', { movieId, seatNumber });
+  return response.data;
+};
 
 export const confirmBooking = async (movieId, seatNumber) => {
   const response = await authAxios.post('/bookings/confirm', { movieId, seatNumber });

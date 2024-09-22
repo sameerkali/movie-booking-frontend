@@ -6,17 +6,13 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Check for the presence of a token in local storage
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
 
   const handleLogout = () => {
-    // Clear the token from local storage
     localStorage.removeItem("token");
-    // Update login state
     setIsLoggedIn(false);
-    // Optionally, redirect to the login page
     navigate('/login');
   };
 

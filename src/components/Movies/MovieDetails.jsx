@@ -22,13 +22,11 @@ const MovieDetails = () => {
 
       getMovieDetails();
 
-      // Initialize Socket.io connection and listen for real-time updates
       const socket = io(SOCKET_SERVER_URL, {
         transports: ["websocket"],
         secure: true
       });
 
-      // Log socket connection status
       socket.on("connect", () => {
         console.log("Socket connected:", socket.id);
       });
@@ -37,7 +35,6 @@ const MovieDetails = () => {
         console.log("Socket disconnected");
       });
 
-      // Listen for price updates
       socket.on("priceUpdate", data => {
         console.log("Received priceUpdate event:", data);
         if (data.movieId === id) {
@@ -48,7 +45,6 @@ const MovieDetails = () => {
         }
       });
 
-      // Listen for seat status updates
       socket.on("seatUpdate", data => {
         console.log("Received seatUpdate event:", data);
         if (data.movieId === id) {
@@ -64,7 +60,6 @@ const MovieDetails = () => {
         }
       });
 
-      // Cleanup on component unmount
       return () => {
         socket.disconnect();
       };
@@ -114,8 +109,7 @@ const MovieDetails = () => {
               key={seat._id}
               className={`p-2 text-center rounded ${seat.status === "reserved"
                 ? "bg-yellow-200"
-                : seat.status === "available" ? "bg-green-200" : "bg-red-200"}`} // this functionality is not working properly always show else case means red color
-            >
+                : seat.status === "available" ? "bg-green-200" : "bg-red-200"}`} >
               {seat.number}
             </div>
           )}

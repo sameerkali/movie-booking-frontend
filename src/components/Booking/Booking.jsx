@@ -49,18 +49,14 @@ const Booking = () => {
       }
     };
 
-    // Listen for seat updates
     socket.on('seatUpdate', handleSeatUpdate);
 
-    // Listen for price updates
     socket.on('priceUpdate', data => {
-      console.log('Received priceUpdate event:', data);
       if (data.movieId === id) {
         setMovie(prevMovie => ({
           ...prevMovie,
           currentPrice: data.newPrice
         }));
-        // toast.info(`Price updated to $${data.newPrice.toFixed(2)}!`);
       }
     });
 
@@ -87,94 +83,25 @@ const Booking = () => {
     }, 2000);
   };
 
-  // const handleReserve = async () => {
-  //   if (!selectedSeat) return;
-  //   setLoading(true);
-
-  //   try {
-  //     const response = await reserveSeat(movie._id, selectedSeat);
-  //     setMovie(response.movie);
-
-  //     // Emit the seat update to all clients
-  //     socket.emit('seatUpdate', {
-  //       movieId: movie._id,
-  //       seatNumber: selectedSeat,
-  //       newStatus: 'reserved'
-  //     });
-
-  //     // Start a timer for reservation expiration (e.g., 2 minutes)
-  //     setTimeout(() => {
-  //       setMovie(prevMovie => {
-  //         const updatedSeats = prevMovie.seats.map(seat =>
-  //           seat.number === selectedSeat && seat.status === 'reserved'
-  //             ? { ...seat, status: 'available' }
-  //             : seat
-  //         );
-  //         if (updatedSeats.some(seat => seat.number === selectedSeat && seat.status === 'available')) {
-  //           socket.emit('seatUpdate', {
-  //             movieId: movie._id,
-  //             seatNumber: selectedSeat,
-  //             newStatus: 'available'
-  //           });
-  //         }
-  //         return { ...prevMovie, seats: updatedSeats };
-  //       });
-  //       setSelectedSeat(null); // Reset selected seat after timeout
-  //     }, 120000);
-  //   } catch (error) {
-  //     console.error('Error reserving seat:', error);
-  //     if (error.message.includes('Invalid token')) {
-  //       handleInvalidToken();
-  //     } else {
-  //       toast.error('Failed to reserve seat. Someone else may have booked it just now.');
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleReserve = async () => {
     if (!selectedSeat) return;
     setLoading(true);
-  
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('User not authenticated');
       }
-  
+
       const response = await reserveSeat(movie._id, selectedSeat);
       setMovie(response.movie);
-  
-      // Emit the seat update to all clients
       socket.emit('seatUpdate', {
         movieId: movie._id,
         seatNumber: selectedSeat,
         newStatus: 'reserved'
       });
-  
-      // Start a timer for reservation expiration (e.g., 2 minutes)
-      setTimeout(() => {
-        setMovie(prevMovie => {
-          const updatedSeats = prevMovie.seats.map(seat =>
-            seat.number === selectedSeat && seat.status === 'reserved'
-              ? { ...seat, status: 'available' }
-              : seat
-          );
-          if (updatedSeats.some(seat => seat.number === selectedSeat && seat.status === 'available')) {
-            socket.emit('seatUpdate', {
-              movieId: movie._id,
-              seatNumber: selectedSeat,
-              newStatus: 'available'
-            });
-          }
-          return { ...prevMovie, seats: updatedSeats };
-        });
-        setSelectedSeat(null); // Reset selected seat after timeout
-      }, 120000);
     } catch (error) {
       console.error('Error reserving seat:', error);
-  
       if (error.message === 'User not authenticated') {
         toast.error('Please login first.');
       } else if (error.message.includes('Invalid token')) {
@@ -186,7 +113,7 @@ const Booking = () => {
       setLoading(false);
     }
   };
-  
+
   const handleConfirm = async () => {
     if (!selectedSeat) return;
 
@@ -200,17 +127,12 @@ const Booking = () => {
             try {
               const response = await confirmBooking(movie._id, selectedSeat);
               setMovie(response.movie);
-
-              // Emit the seat update to all clients
               socket.emit('seatUpdate', {
                 movieId: movie._id,
                 seatNumber: selectedSeat,
                 newStatus: 'booked'
               });
-
               toast.success('Booking confirmed!');
-
-              // Reset selected seat so user can select another one
               setSelectedSeat(null);
             } catch (error) {
               console.error('Error confirming booking:', error);
@@ -232,7 +154,6 @@ const Booking = () => {
   return (
     <div className="p-6">
       <ToastContainer />
-      {/* Back Button */}
       <button 
         onClick={() => navigate(-1)} 
         className="bg-gray-200 text-gray-800 px-4 py-2 rounded mb-4 hover:bg-gray-300"

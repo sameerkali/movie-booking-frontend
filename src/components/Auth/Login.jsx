@@ -14,11 +14,8 @@ const Login = () => {
     setError(null);
     try {
       const response = await login(data);
-      // Assuming the API returns a token
       localStorage.setItem('token', response.token);
-      
       navigate('/')
-      // Reload the page to reflect the login state in the header
       window.location.reload();
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
