@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { fetchMovieById, reserveSeat, confirmBooking } from '../../services/api';
 import { format } from 'date-fns';
+import io from 'socket.io-client';
+import { SOCKET_SERVER_URL } from '../../utils/utils';
 
 const Booking = () => {
   const [movie, setMovie] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
-  const [reservationStatus, setReservationStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
+    const newSocket = io(SOCKET_SERVER_URL, { transports: ['websocket'], secure: true });
+    setSocket(newSocket);
+
     const getMovieDetails = async () => {
       try {
         const data = await fetchMovieById(id);
@@ -19,49 +25,111 @@ const Booking = () => {
         console.error('Error fetching movie details:', error);
       }
     };
+
     getMovieDetails();
+
+    return () => newSocket.close();
   }, [id]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSeatUpdate = (data) => {
+      if (data.movieId === id) {
+        setMovie(prevMovie => ({
+          ...prevMovie,
+          seats: prevMovie.seats.map(seat =>
+            seat.number === data.seatNumber ? { ...seat, status: data.newStatus } : seat
+          )
+        }));
+      }
+    };
+
+    socket.on('seatUpdate', handleSeatUpdate);
+
+    return () => {
+      socket.off('seatUpdate', handleSeatUpdate);
+    };
+  }, [socket, id]);
+
   const handleSeatSelect = (seatNumber) => {
-    setSelectedSeat(seatNumber);
+    if (movie.seats.find(seat => seat.number === seatNumber).status === 'available') {
+      setSelectedSeat(seatNumber);
+    }
   };
 
   const handleReserve = async () => {
     if (!selectedSeat) return;
+    setLoading(true);
+
     try {
       const response = await reserveSeat(movie._id, selectedSeat);
       setMovie(response.movie);
-      setReservationStatus('reserved');
+
+      // Emit the seat update to all clients
+      socket.emit('seatUpdate', {
+        movieId: movie._id,
+        seatNumber: selectedSeat,
+        newStatus: 'reserved'
+      });
+
       // Start a timer for reservation expiration (e.g., 2 minutes)
       setTimeout(() => {
-        if (reservationStatus === 'reserved') {
-          setReservationStatus(null);
-          setSelectedSeat(null);
-        }
+        setMovie(prevMovie => {
+          const updatedSeats = prevMovie.seats.map(seat =>
+            seat.number === selectedSeat && seat.status === 'reserved'
+              ? { ...seat, status: 'available' }
+              : seat
+          );
+          if (updatedSeats.some(seat => seat.number === selectedSeat && seat.status === 'available')) {
+            socket.emit('seatUpdate', {
+              movieId: movie._id,
+              seatNumber: selectedSeat,
+              newStatus: 'available'
+            });
+          }
+          return { ...prevMovie, seats: updatedSeats };
+        });
+        setSelectedSeat(null);
       }, 120000);
     } catch (error) {
       console.error('Error reserving seat:', error);
+      alert('Failed to reserve seat. Someone else may have booked it just now.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleConfirm = async () => {
     if (!selectedSeat) return;
+
     try {
       const response = await confirmBooking(movie._id, selectedSeat);
       setMovie(response.movie);
-      setReservationStatus('confirmed');
-      // Navigate to a confirmation page or show a confirmation message
-      navigate('/confirmation');
+
+      // Emit the seat update to all clients
+      socket.emit('seatUpdate', {
+        movieId: movie._id,
+        seatNumber: selectedSeat,
+        newStatus: 'booked'
+      });
+
+      alert("Booking confirmed!");
+      // navigate('/confirmation');
     } catch (error) {
       console.error('Error confirming booking:', error);
     }
   };
+  const handleclick = () => {
+    navigate(-1)
+  }
 
   if (!movie) return <div>Loading...</div>;
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6">Book Tickets for {movie.title}</h1>
+    <div className="p-6">
+
+      <h1 className="text-3xl font-bold mb-6"><h1 onClick={handleclick}>{`<`}</h1>Book Tickets for {movie.title}</h1>
       <p className="mb-4"><strong>Showtime:</strong> {format(new Date(movie.showtime), 'PPpp')}</p>
       <p className="mb-4"><strong>Current Price:</strong> ${movie.currentPrice.toFixed(2)}</p>
       
@@ -92,20 +160,28 @@ const Booking = () => {
       {selectedSeat && (
         <div className="mb-4">
           <p>Selected Seat: {selectedSeat}</p>
-          {reservationStatus === null && (
-            <button onClick={handleReserve} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-              Reserve Seat
+          {loading ? (
+            <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
+              Reserving...
             </button>
-          )}
-          {reservationStatus === 'reserved' && (
-            <button onClick={handleConfirm} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-              Confirm Booking
-            </button>
+          ) : (
+            <>
+              {movie.seats.find(seat => seat.number === selectedSeat).status === 'available' && (
+                <button onClick={handleReserve} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                  Reserve Seat
+                </button>
+              )}
+              {movie.seats.find(seat => seat.number === selectedSeat).status === 'reserved' && (
+                <button onClick={handleConfirm} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                  Confirm Booking
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
 
-      {reservationStatus === 'confirmed' && (
+      {movie.seats.find(seat => seat.number === selectedSeat)?.status === 'booked' && (
         <p className="text-green-600 font-semibold">Booking confirmed!</p>
       )}
     </div>
@@ -113,3 +189,7 @@ const Booking = () => {
 };
 
 export default Booking;
+
+
+
+
