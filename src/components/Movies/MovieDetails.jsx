@@ -66,61 +66,65 @@ const MovieDetails = () => {
     },
     [id]
   );
-  if (!movie) return (
-    <div>
-      <video src="/loading.mp4" autoPlay muted loop />
-    </div>
-  );
+
+  if (!movie)
+    return (
+      <div>
+        <video src="/loading.mp4" autoPlay muted loop />
+      </div>
+    );
 
   return (
     <div>
-       <Link to={`/`}>
+      <Link to={`/`}>
         <p className="bg-gray-200 text-gray-800 px-4 py-2 rounded mb-4 hover:bg-gray-300 w-28 text-center">
           Back
         </p>
       </Link>
-    <div className="flex flex-col md:flex-row">
-     
-      <div className="md:w-2/3">
-        <h1 className="text-3xl font-bold mb-4">
-          {movie.title}
-        </h1>
-        <p className="text-gray-600 mb-4">
-          {movie.description}
-        </p>
-        <p className="mb-2">
-          <strong>Showtime:</strong> {format(new Date(movie.showtime), "PPpp")}
-        </p>
-        <p className="mb-2">
-          <strong>Base Price:</strong> ${movie.basePrice.toFixed(2)}
-        </p>
-        <p className="mb-4">
-          <strong>Current Price:</strong> ${movie.currentPrice.toFixed(2)}
-        </p>
-        <Link
-          to={`/booking/${movie._id}`}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Book Tickets
-        </Link>
-      </div>
-      <div className="md:w-1/3 mt-4 md:mt-0">
-        <h2 className="text-xl font-semibold mb-2">Seat Availability</h2>
-        <div className="grid grid-cols-5 gap-2 bg--200">
-          {movie.seats.map(seat =>
-            <div
-              key={seat._id}
-              className={`p-2 text-center rounded ${seat.status === "reserved"
-                ? "bg-yellow-200"
-                : seat.status === "available" ? "bg-green-200" : "bg-red-200"}`} >
-              {seat.number}
-            </div>
-          )}
+      <div className="flex flex-col md:flex-row">
+        <div className="md:w-2/3">
+          <h1 className="text-3xl font-bold mb-4">
+            {movie.title}
+          </h1>
+          <p className="text-gray-600 mb-4">
+            {movie.description}
+          </p>
+          <p className="mb-2">
+            <strong>Showtime:</strong>{" "}
+            {format(new Date(movie.showtime), "PPpp")}
+          </p>
+          <p className="mb-2">
+            <strong>Base Price:</strong> ${movie.basePrice.toFixed(2)}
+          </p>
+          <p className="mb-4">
+            <strong>Current Price:</strong> ${movie.currentPrice.toFixed(2)}
+          </p>
+          <Link
+            to={`/booking/${movie._id}`}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Book Tickets
+          </Link>
+        </div>
+        <div className="md:w-1/3 mt-4 md:mt-0">
+          <h2 className="text-xl font-semibold mb-2">Seat Availability</h2>
+          <div className="grid grid-cols-5 gap-2 bg--200">
+            {movie.seats.map(seat =>
+              <div
+                key={seat._id}
+                className={`p-2 text-center rounded ${seat.status === "reserved"
+                  ? "bg-yellow-200"
+                  : seat.status === "available"
+                    ? "bg-green-200"
+                    : "bg-red-200"}`}
+              >
+                {seat.number}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
-    </div>
-
   );
 };
 
