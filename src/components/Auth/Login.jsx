@@ -16,7 +16,10 @@ const Login = () => {
       const response = await login(data);
       // Assuming the API returns a token
       localStorage.setItem('token', response.token);
-      navigate('/'); // Redirect to home page after successful login
+      
+      navigate('/')
+      // Reload the page to reflect the login state in the header
+      window.location.reload();
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
     } finally {
@@ -33,10 +36,13 @@ const Login = () => {
           <input
             type="email"
             id="email"
-            {...register('email', { required: 'Email is required', pattern: {
-              value: /\S+@\S+\.\S+/,
-              message: 'Invalid email address',
-            }})}
+            {...register('email', { 
+              required: 'Email is required', 
+              pattern: {
+                value: /\S+@\S+\.\S+/,
+                message: 'Invalid email address',
+              }
+            })}
             className="w-full px-3 py-2 border rounded"
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
@@ -46,10 +52,13 @@ const Login = () => {
           <input
             type="password"
             id="password"
-            {...register('password', { required: 'Password is required', minLength: {
-              value: 6,
-              message: 'Password must be at least 6 characters',
-            }})}
+            {...register('password', { 
+              required: 'Password is required', 
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters',
+              }
+            })}
             className="w-full px-3 py-2 border rounded"
           />
           {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
