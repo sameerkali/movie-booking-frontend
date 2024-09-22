@@ -149,7 +149,11 @@ const Booking = () => {
     });
   };
 
-  if (!movie) return <div>Loading...</div>;
+  if (!movie) return (
+    <div>
+      <video src="/loading.mp4" autoPlay muted loop />
+    </div>
+  );
 
   return (
     <div className="p-6">
